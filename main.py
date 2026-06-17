@@ -18,7 +18,7 @@ app = FastAPI(
 class ChatMessageInput(BaseModel):
     user_message: str
     phone_number: str
-    chat_history: Optional[List[dict]] = []
+    chat_history: Optional[List[dict]] = None
 
 
 @app.get("/")
@@ -39,7 +39,7 @@ def handle_incoming_customer_text(payload: ChatMessageInput):
     ai_response = run_fade_chat_turn(
         enriched_message,
         payload.phone_number,
-        payload.chat_history
+        payload.chat_history or []
     )
 
     if ai_response["status"] == "error":
@@ -48,4 +48,8 @@ def handle_incoming_customer_text(payload: ChatMessageInput):
             detail=ai_response["reply_text"]
         )
 
-    return ai_response
+    return {
+        "status": ai_response["status"],
+        "reply_text": ai_response["reply_text"],
+        "phone_number": payload.phone_number
+    }
